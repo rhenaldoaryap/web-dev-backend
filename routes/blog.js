@@ -8,21 +8,13 @@ router.get("/", function (req, res) {
   res.redirect("/posts");
 });
 
-router.get("/posts", async function (req, res) {
-  const query = `
-    SELECT posts.*, authors.name AS author_name FROM posts
-    INNER JOIN authors ON posts.author_id = authors.id
-  `;
-  const [posts] = await db.query(query);
-  res.render("posts-list", { posts: posts });
-});
-
 router.get("/new-post", async function (req, res) {
   const [authors] = await db.query("SELECT * FROM authors");
 
   res.render("create-post", { authors: authors });
 });
 
+// Create Post
 router.post("/posts", async function (req, res) {
   // fetching data from name propery at HTML template
   const data = [
@@ -41,6 +33,17 @@ router.post("/posts", async function (req, res) {
   res.redirect("/posts");
 });
 
+// Read Posts
+router.get("/posts", async function (req, res) {
+  const query = `
+    SELECT posts.*, authors.name AS author_name FROM posts
+    INNER JOIN authors ON posts.author_id = authors.id
+  `;
+  const [posts] = await db.query(query);
+  res.render("posts-list", { posts: posts });
+});
+
+// Get Specific Post
 router.get("/posts/:id", async function (req, res) {
   const query = `
     SELECT posts.*, authors.name AS author_name, authors.email AS author_email FROM posts
@@ -68,6 +71,20 @@ router.get("/posts/:id", async function (req, res) {
   };
 
   res.render("post-detail", { post: postData });
+});
+
+// Update Post
+router.get("/posts/:id/edit", async function (req, res) {
+  const query = `
+    SELECT * FROM posts WHERE id = ?
+  `;
+  const [posts] = await db.query(query, [req.params.id]);
+
+  if (!posts || posts.length === 0) {
+    return res.status(400).render("400");
+  }
+
+  res.render("update-post", { post: posts[0] });
 });
 
 module.exports = router;
